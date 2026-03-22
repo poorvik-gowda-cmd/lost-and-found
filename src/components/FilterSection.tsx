@@ -43,7 +43,7 @@ export function FilterSection() {
     <div className="flex flex-wrap items-center gap-4">
       {/* Category Filter */}
       <div className="flex items-center gap-2">
-        <Select value={currentCategory as string} onValueChange={(v) => updateFilters('category', v)}>
+        <Select value={currentCategory as string} onValueChange={(v) => updateFilters('category', v || 'all')}>
           <SelectTrigger className="h-11 w-[180px] glass-dark border-white/10 rounded-xl text-white/70">
             <div className="flex items-center">
               <Tag className="w-4 h-4 mr-2 text-indigo-400" />
