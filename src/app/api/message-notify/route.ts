@@ -2,24 +2,27 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(req: Request) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const resendKey = process.env.RESEND_API_KEY
+
+    // Validation
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json({ error: 'Supabase configuration missing' }, { status: 500 })
+    }
+    if (!resendKey || resendKey === 're_your_api_key_here') {
+      return NextResponse.json({ error: 'Resend API key missing' }, { status: 500 })
+    }
+
+    const resend = new Resend(resendKey)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     const { itemId, senderId, receiverId, content } = await req.json()
 
     if (!itemId || !senderId || !receiverId || !content) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
-
-    // 0. Validate Environment Variables
-    const isPlaceholderResend = process.env.RESEND_API_KEY === 're_your_api_key_here'
-    if (isPlaceholderResend || !process.env.RESEND_API_KEY) {
-      return NextResponse.json({ error: 'RESEND_API_KEY not configured' }, { status: 500 })
     }
 
     // 1. Fetch Data (Item, Sender, Receiver)

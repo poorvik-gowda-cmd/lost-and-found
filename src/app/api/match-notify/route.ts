@@ -2,34 +2,27 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { NextResponse } from 'next/server'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // Use service role for elevated privileges
-)
-
 export async function POST(req: Request) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const resendKey = process.env.RESEND_API_KEY
+
+    // Validation
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json({ error: 'Supabase configuration missing' }, { status: 500 })
+    }
+    if (!resendKey || resendKey === 're_your_api_key_here') {
+      return NextResponse.json({ error: 'Resend API key missing' }, { status: 500 })
+    }
+
+    const resend = new Resend(resendKey)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     const { item } = await req.json()
 
     if (!item) {
       return NextResponse.json({ error: 'Item data is required' }, { status: 400 })
-    }
-
-    // 0. Validate Environment Variables
-    const isPlaceholderResend = process.env.RESEND_API_KEY === 're_your_api_key_here'
-    const isPlaceholderService = process.env.SUPABASE_SERVICE_ROLE_KEY === 'your_service_role_key_here'
-    
-    if (isPlaceholderResend || !process.env.RESEND_API_KEY) {
-      return NextResponse.json({ 
-        error: 'RESEND_API_KEY is missing or is still a placeholder in .env.local. Please add a real key from resend.com' 
-      }, { status: 500 })
-    }
-
-    if (isPlaceholderService || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      return NextResponse.json({ 
-        error: 'SUPABASE_SERVICE_ROLE_KEY is missing or is still a placeholder in .env.local. Please add your service role key from Supabase Dashboard.' 
-      }, { status: 500 })
     }
 
     // 1. Find matching items
